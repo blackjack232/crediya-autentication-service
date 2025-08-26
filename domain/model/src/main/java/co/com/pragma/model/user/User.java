@@ -1,14 +1,26 @@
 package co.com.pragma.model.user;
-import lombok.Builder;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-//import lombok.NoArgsConstructor;
-import lombok.Setter;
+
+import lombok.*;
+
+
+import java.io.Serializable;
 
 @Getter
 @Setter
-//@NoArgsConstructor
+@NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
-public class User {
+
+public class User implements Serializable {
+
+ 
+    private Long idUser; // corresponde a id_usuario en la BD
+
+    private String firstName;
+    private String lastName;
+    private String email;
+    private String identityDocument;
+    private String phone;
+    private Long idRole; // FK a rol.UniqueID
+    private Double baseSalary;
 }
