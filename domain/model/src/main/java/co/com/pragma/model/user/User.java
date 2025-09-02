@@ -4,6 +4,7 @@ import lombok.*;
 
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 @Getter
 @Setter
@@ -22,5 +23,5 @@ public class User implements Serializable {
     private String identityDocument;
     private String phone;
     private Long idRole; // FK a rol.UniqueID
-    private Double baseSalary;
+    private BigDecimal baseSalary;
 }

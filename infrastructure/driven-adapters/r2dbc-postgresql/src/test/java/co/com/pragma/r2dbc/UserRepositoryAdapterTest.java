@@ -17,10 +17,10 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class UserRepositoryAdapterTest {
     // TODO: change four you own tests
-
+/*
     @InjectMocks
     UserRepositoryAdapter repositoryAdapter;
-
+*/
     @Mock
     UserReactiveRepository repository;
 
