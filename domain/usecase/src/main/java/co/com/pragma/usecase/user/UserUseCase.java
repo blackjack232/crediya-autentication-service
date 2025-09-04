@@ -31,18 +31,26 @@ public class UserUseCase {
             return Mono.error(new IllegalArgumentException(UserMessages.BASE_SALARY_REQUIRED));
         }
 
-        return userRepository.existsByEmail(user.getEmail())
-                .flatMap(exists -> {
-                    if (exists) {
+
+        return userRepository.existsByRol(user.getIdRole())
+                .flatMap(roleExists -> {
+                    if (!roleExists) {
+                        return Mono.error(new IllegalArgumentException(UserMessages.ROLE_NOT_FOUND));
+                    }
+                    return userRepository.existsByEmail(user.getEmail());
+                })
+                .flatMap(emailExists -> {
+                    if (emailExists) {
                         return Mono.error(new IllegalArgumentException(UserMessages.EMAIL_ALREADY_EXISTS));
                     }
                     return userRepository.existsByIdentityDocument(user.getIdentityDocument());
                 })
-                .flatMap(exists -> {
-                    if (exists) {
+                .flatMap(documentExists -> {
+                    if (documentExists) {
                         return Mono.error(new IllegalArgumentException(UserMessages.DOCUMENT_ALREADY_EXISTS));
                     }
                     return userRepository.save(user);
                 });
+
     }
 }

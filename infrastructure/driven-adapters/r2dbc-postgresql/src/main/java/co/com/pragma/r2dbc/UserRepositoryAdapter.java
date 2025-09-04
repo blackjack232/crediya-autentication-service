@@ -58,4 +58,16 @@ public class UserRepositoryAdapter implements UserRepository {
                 .map(row -> row.get("cnt", Long.class) > 0)
                 .one();
     }
+    @Override
+    public Mono<Boolean> existsByRol(Long id) {
+        return client.sql("SELECT COUNT(*) AS cnt FROM auth.role WHERE uniqueid = :id")
+                .bind("id", id)
+                .map(row -> {
+                    Number count = row.get("cnt", Number.class); // soporte para Integer/Long
+                    return count != null && count.longValue() > 0;
+                })
+                .one();
+    }
+
+
 }
