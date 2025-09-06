@@ -13,7 +13,7 @@ public class OpenApiConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("API Autenticacion")
+                        .title("API Authentication")
                         .version("1.0")
                         .description("Documentacion de la API con Swagger y OpenAPI 3"));
     }

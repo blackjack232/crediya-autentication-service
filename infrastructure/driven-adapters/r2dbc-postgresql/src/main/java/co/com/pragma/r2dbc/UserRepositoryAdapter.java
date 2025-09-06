@@ -50,14 +50,34 @@ public class UserRepositoryAdapter implements UserRepository {
                 .map(row -> row.get("cnt", Long.class) > 0)
                 .one();
     }
-
+/*
     @Override
     public Mono<Boolean> existsByIdentityDocument(String identityDocument) {
         return client.sql("SELECT COUNT(*) as cnt FROM auth.users WHERE identity_document = :identityDocument")
                 .bind("identityDocument", identityDocument)
                 .map(row -> row.get("cnt", Long.class) > 0)
                 .one();
+
+
     }
+
+ */
+    @Override
+    public Mono<Boolean> existsByIdentityDocument(String identityDocument) {
+        return client.sql("SELECT COUNT(*) as cnt FROM auth.users WHERE identity_document = :identityDocument")
+                .bind("identityDocument", identityDocument)
+                .map(row -> row.get("cnt", Long.class) > 0)
+                .one()
+                .doOnSuccess(exists -> {
+                    if (Boolean.TRUE.equals(exists)) {
+                        log.info("✅ Usuario con documento [{}] encontrado en la base de datos.", identityDocument);
+                    } else {
+                        log.warn("Usuario con documento [{}] NO existe en la base de datos.", identityDocument);
+                    }
+                })
+                .doOnError(e -> log.error(" Error al verificar usuario: {}", e.getMessage()));
+    }
+
     @Override
     public Mono<Boolean> existsByRol(Long id) {
         return client.sql("SELECT COUNT(*) AS cnt FROM auth.role WHERE uniqueid = :id")

@@ -11,7 +11,6 @@ import reactor.core.publisher.Mono;
 import java.math.BigDecimal;
 
 @RequiredArgsConstructor
-
 public class UserUseCase {
     private final UserRepository userRepository;
     private static final BigDecimal MIN_SALARY = new BigDecimal("0");
@@ -52,5 +51,15 @@ public class UserUseCase {
                     return userRepository.save(user);
                 });
 
+    }
+
+    /**
+     * Verifica si un usuario existe dado su número de identificación.
+     *
+     * @param identityDocument Número de documento
+     * @return Mono<Boolean> indicando si existe
+     */
+    public Mono<Boolean> existsUserByIdentification(String identityDocument) {
+        return userRepository.existsByIdentityDocument(identityDocument);
     }
 }

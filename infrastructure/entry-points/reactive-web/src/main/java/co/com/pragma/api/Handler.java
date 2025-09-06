@@ -27,36 +27,23 @@ public class Handler {
     public Mono<String> status() {
         return Mono.just("Auth service is running ✅");
     }
-/*
-    public Mono<ServerResponse> createUser(ServerRequest serverRequest) {
-        return serverRequest.bodyToMono(User.class)
-                .flatMap(userUseCase::saveUser)
-                .flatMap(savedUser -> {
-                    ApiResponse<User> response = ApiResponse.<User>builder()
-                            .message(UserMessages.USUARIO_CREADO)
-                            .code(201)
-                            .success(true)
-                            .data(savedUser)
-                            .build();
-
-                    return ServerResponse.status(HttpStatus.CREATED) // 201
+    // Nuevo método: verificar existencia de usuario
+    public Mono<ServerResponse> existsUserByIdentification(ServerRequest serverRequest) {
+        String identification = serverRequest.pathVariable("identification");
+        return userUseCase.existsUserByIdentification(identification)
+                .flatMap(exists -> {
+                    co.com.pragma.api.dto.response.ApiResponse<Boolean> response =
+                            co.com.pragma.api.dto.response.ApiResponse.<Boolean>builder()
+                                    .message("Usuario verificado")
+                                    .code(200)
+                                    .success(true)
+                                    .data(exists)
+                                    .build();
+                    return ServerResponse.ok()
                             .contentType(MediaType.APPLICATION_JSON)
                             .bodyValue(response);
-                })
-                .onErrorResume(e -> {
-                    ApiResponse<Object> errorResponse = ApiResponse.builder()
-                            .message("Error: " + e.getMessage())
-                            .code(400)
-                            .success(false)
-                            .data(null)
-                            .build();
-
-                    return ServerResponse.badRequest()
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .bodyValue(errorResponse);
                 });
-    }*/
-
+    }
     public Mono<ServerResponse> createUser(ServerRequest serverRequest) {
         return serverRequest.bodyToMono(UserRequest.class)
                 .map(userRequestMapper::toDomain)  // DTO → Domain

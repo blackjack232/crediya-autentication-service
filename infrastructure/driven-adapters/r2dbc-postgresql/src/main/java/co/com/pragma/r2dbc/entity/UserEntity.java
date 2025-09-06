@@ -7,7 +7,7 @@ import org.springframework.data.relational.core.mapping.Column;
 
 import java.math.BigDecimal;
 
-@Table(name = "users")// si dejas user, debe ir con comillas en SQL -> mejor renombrar a app_user
+@Table(name = "users")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

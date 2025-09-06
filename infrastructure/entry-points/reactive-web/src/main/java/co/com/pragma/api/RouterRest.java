@@ -17,11 +17,13 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
+import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
 import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
 @Configuration
 public class RouterRest {
+
     @Bean
     @RouterOperations({
             @RouterOperation(
@@ -42,20 +44,48 @@ public class RouterRest {
                             ),
                             responses = {
                                     @ApiResponse(
-                                            responseCode = "200",
+                                            responseCode = "201",
                                             description = "User created successfully",
                                             content = @Content(schema = @Schema(implementation = UserRequest.class))
                                     )
                             }
                     )
+            ),
+            @RouterOperation(
+                    path = "/api/users/{identification}",
+                    produces = {MediaType.APPLICATION_JSON_VALUE},
+                    method = RequestMethod.GET,
+                    beanClass = Handler.class,
+                    beanMethod = "existsUserByIdentification",
+                    operation = @Operation(
+                            operationId = "existsUserByIdentification",
+                            summary = "Verify if user exists",
+                            parameters = {
+                                    @io.swagger.v3.oas.annotations.Parameter(
+                                            name = "identification",
+                                            description = "User identification number",
+                                            required = true,
+                                            example = "123456789",
+                                            schema = @Schema(type = "string"),
+                                            in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH // 👈 ESTE ES EL SECRETO
+                                    )
+                            },
+                            responses = {
+                                    @ApiResponse(
+                                            responseCode = "200",
+                                            description = "User existence validated",
+                                            content = @Content(schema = @Schema(implementation = Boolean.class))
+                                    )
+                            }
+                    )
             )
+
+
     })
-
-
-        public RouterFunction<ServerResponse> routerFunction(Handler handler) {
-            return route(POST("/api/users"), handler::createUser)
-                    .filter(new GlobalExceptionHandler()); // Aquí aplicas el filtro
-        }
-
-
+    public RouterFunction<ServerResponse> routerFunction(Handler handler) {
+        return route(POST("/api/users"), handler::createUser)
+                .andRoute(GET("/api/users/{identification}"), handler::existsUserByIdentification)
+                .filter(new GlobalExceptionHandler()); // Aplica el filtro global
+    }
 }
+
