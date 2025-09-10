@@ -9,12 +9,19 @@ spring:
     console:
       enabled: true
       path: "/h2"
+  security:
+    user:
+      name: ""
+      password: ""
+
 
   springdoc:
     swagger-ui:
       path: /docs              # UI en /docs
+      custom-css-url: /swagger-ui.css
     api-docs:
       path: /api-docs          # JSON en /api-docs (y YAML en /api-docs.yaml)
+
   r2dbc:
     host: localhost
     port: 5432
@@ -35,5 +42,7 @@ management:
         enabled: true
 cors:
   allowed-origins: "http://localhost:4200,http://localhost:8080"
+
+
 
 

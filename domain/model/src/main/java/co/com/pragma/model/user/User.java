@@ -22,6 +22,7 @@ public class User implements Serializable {
     private String email;
     private String identityDocument;
     private String phone;
+    public  String password;
     private Long idRole; // FK a rol.UniqueID
     private BigDecimal baseSalary;
 }

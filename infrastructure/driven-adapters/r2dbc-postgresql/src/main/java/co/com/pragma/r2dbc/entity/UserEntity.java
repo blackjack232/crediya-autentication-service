@@ -30,6 +30,7 @@ public class UserEntity {
     @Column("identity_document")
     private String identityDocument;
 
+    private String password;
 
     private String phone;
 

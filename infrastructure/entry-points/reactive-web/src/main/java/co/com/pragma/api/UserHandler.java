@@ -5,7 +5,6 @@ import co.com.pragma.api.dto.response.ApiResponse;
 import co.com.pragma.api.dto.response.UserResponse;
 import co.com.pragma.api.mapper.UserRequestMapper;
 import co.com.pragma.api.mapper.UserResponseMapper;
-import co.com.pragma.model.user.User;
 import co.com.pragma.model.user.constants.UserMessages;
 import co.com.pragma.usecase.user.UserUseCase;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +17,7 @@ import reactor.core.publisher.Mono;
 
 @RestController
 @RequiredArgsConstructor
-public class Handler {
+public class UserHandler {
 
     private final UserUseCase userUseCase;
     private final UserRequestMapper userRequestMapper;
@@ -44,6 +43,7 @@ public class Handler {
                             .bodyValue(response);
                 });
     }
+
     public Mono<ServerResponse> createUser(ServerRequest serverRequest) {
         return serverRequest.bodyToMono(UserRequest.class)
                 .map(userRequestMapper::toDomain)  // DTO → Domain

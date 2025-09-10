@@ -1,0 +1,7 @@
+.swagger-ui .topbar {
+  background-color: #1a237e !important; /* azul oscuro */
+}
+
+.swagger-ui .topbar .download-url-wrapper .download-url-input {
+  border: 1px solid #fff !important;
+}
