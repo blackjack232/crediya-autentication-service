@@ -34,6 +34,7 @@ public class SecurityConfig {
                         .pathMatchers("/swagger-ui/**", "/v3/api-docs/**", "/webjars/**").permitAll()
                         .pathMatchers(HttpMethod.POST, "/api/users/create").hasAnyRole("ADMIN", "ASESOR")
                         .pathMatchers(HttpMethod.GET, "/api/users/{identification}").hasRole("CLIENTE")
+                        .pathMatchers(HttpMethod.GET, "/api/users/validate-role/{identification}").hasRole("ASESOR")
                         .pathMatchers("/api/users/**").authenticated()  // proteger con JWT
                         .anyExchange().permitAll()
                 )

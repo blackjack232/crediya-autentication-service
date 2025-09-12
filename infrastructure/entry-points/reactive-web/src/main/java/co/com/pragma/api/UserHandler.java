@@ -14,6 +14,11 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.core.Authentication;
+
+import java.util.List;
+
 
 @RestController
 @RequiredArgsConstructor
@@ -22,6 +27,7 @@ public class UserHandler {
     private final UserUseCase userUseCase;
     private final UserRequestMapper userRequestMapper;
     private final UserResponseMapper userResponseMapper;
+
 
     public Mono<String> status() {
         return Mono.just("Auth service is running ✅");
@@ -74,6 +80,65 @@ public class UserHandler {
                             .bodyValue(errorResponse);
                 });
     }
+    public Mono<ServerResponse> validateUserRole(ServerRequest serverRequest) {
+        String identification = serverRequest.pathVariable("identification");
+
+        return ReactiveSecurityContextHolder.getContext()
+                .flatMap(securityContext -> {
+                    var authentication = securityContext.getAuthentication();
+
+                    if (authentication == null || !authentication.isAuthenticated()) {
+                        return ServerResponse.status(401)
+                                .bodyValue(ApiResponse.<Object>builder()
+                                        .message("No autenticado: token no válido o ausente")
+                                        .code(401)
+                                        .success(false)
+                                        .data(null)
+                                        .build());
+                    }
+
+                    String username = authentication.getName();
+                    List<String> roles = authentication.getAuthorities().stream()
+                            .map(granted -> granted.getAuthority())
+                            .toList();
+
+                    if (!roles.contains("ROLE_ASESOR")) {
+                        return ServerResponse.status(403)
+                                .bodyValue(ApiResponse.<Object>builder()
+                                        .message("Acceso denegado: no tienes el rol ASESOR")
+                                        .code(403)
+                                        .success(false)
+                                        .data(null)
+                                        .build());
+                    }
+
+                    return userUseCase.existsUserByIdentification(identification)
+                            .flatMap(exists -> ServerResponse.ok()
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .bodyValue(ApiResponse.<Boolean>builder()
+                                            .message("Usuario encontrado, rol validado")
+                                            .code(200)
+                                            .success(true)
+                                            .data(exists)
+                                            .build()))
+                            .switchIfEmpty(ServerResponse.status(404)
+                                    .bodyValue(ApiResponse.<Object>builder()
+                                            .message("Usuario no encontrado")
+                                            .code(404)
+                                            .success(false)
+                                            .data(null)
+                                            .build()));
+                })
+                .switchIfEmpty(ServerResponse.status(401)
+                        .bodyValue(ApiResponse.<Object>builder()
+                                .message("No hay contexto de seguridad (token ausente)")
+                                .code(401)
+                                .success(false)
+                                .data(null)
+                                .build()));
+    }
+
+
 
 }
 

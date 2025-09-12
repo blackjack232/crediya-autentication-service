@@ -62,4 +62,5 @@ public class UserUseCase {
     public Mono<Boolean> existsUserByIdentification(String identityDocument) {
         return userRepository.existsByIdentityDocument(identityDocument);
     }
+
 }

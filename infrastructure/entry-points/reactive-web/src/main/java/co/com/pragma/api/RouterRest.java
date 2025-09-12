@@ -112,6 +112,7 @@ import static org.springframework.web.reactive.function.server.RequestPredicates
 import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
+
 @Configuration
 public class RouterRest {
 
@@ -156,7 +157,7 @@ public class RouterRest {
                     operation = @Operation(
                             operationId = "existsUserByIdentification",
                             summary = "Verify if user exists",
-                            security = {@SecurityRequirement(name = "bearerAuth")}, // JWT required
+                            security = {@SecurityRequirement(name = "bearerAuth")},
                             parameters = {
                                     @io.swagger.v3.oas.annotations.Parameter(
                                             name = "identification",
@@ -179,12 +180,52 @@ public class RouterRest {
                                     )
                             }
                     )
+            ),
+            @RouterOperation(
+                    path = "/api/users/validate-role/{identification}",
+                    produces = {MediaType.APPLICATION_JSON_VALUE},
+                    method = RequestMethod.GET,
+                    beanClass = UserHandler.class,
+                    beanMethod = "validateUserRole",
+                    operation = @Operation(
+                            operationId = "validateUserRole",
+                            summary = "Get user role by identification",
+                            description = "Obtiene el rol del usuario y valida que el token JWT sea válido",
+                            security = {@SecurityRequirement(name = "bearerAuth")},
+                            parameters = {
+                                    @io.swagger.v3.oas.annotations.Parameter(
+                                            name = "identification",
+                                            description = "Identificación del usuario",
+                                            required = true,
+                                            example = "123456789",
+                                            schema = @Schema(type = "string"),
+                                            in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH
+                                    )
+                            },
+                            responses = {
+                                    @ApiResponse(
+                                            responseCode = "200",
+                                            description = "Rol obtenido correctamente",
+                                            content = @Content(schema = @Schema(implementation = String.class))
+                                    ),
+                                    @ApiResponse(
+                                            responseCode = "401",
+                                            description = "Token inválido o ausente"
+                                    ),
+                                    @ApiResponse(
+                                            responseCode = "404",
+                                            description = "Usuario no encontrado"
+                                    )
+                            }
+                    )
             )
     })
     public RouterFunction<ServerResponse> routerFunction(UserHandler userHandler) {
         return route(POST("/api/users/create"), userHandler::createUser)
                 .andRoute(GET("/api/users/{identification}"), userHandler::existsUserByIdentification)
-                .filter(new GlobalExceptionHandler()); // Aplica el filtro global
+                .andRoute(GET("/api/users/validate-role/{identification}"), userHandler::validateUserRole)
+                .filter(new GlobalExceptionHandler());
     }
 }
+
 

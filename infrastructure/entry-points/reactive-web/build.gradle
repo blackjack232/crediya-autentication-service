@@ -10,4 +10,8 @@ dependencies {
 
     // Si usas Lombok, necesitas también el binding entre Lombok y MapStruct
     annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
+
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
 }
