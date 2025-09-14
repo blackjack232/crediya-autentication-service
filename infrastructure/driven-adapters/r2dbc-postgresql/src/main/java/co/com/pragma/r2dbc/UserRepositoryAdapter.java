@@ -2,6 +2,7 @@ package co.com.pragma.r2dbc;
 
 import co.com.pragma.model.user.User;
 import co.com.pragma.model.user.gateways.UserRepository;
+import co.com.pragma.r2dbc.contants.UserSqlConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Repository;
@@ -20,16 +21,21 @@ public class UserRepositoryAdapter implements UserRepository {
         this.client = client;
     }
 
+    /**
+     * Guarda un nuevo usuario en la base de datos.
+     * <p>
+     * Inserta un registro en la tabla <code>auth.users</code> y retorna el objeto
+     * {@link User} con el <code>id_user</code> generado.
+     *
+     * @param user Objeto {@link User} a insertar.
+     * @return {@link Mono} que emite el usuario guardado con su ID asignado.
+     */
     @Override
     @Transactional
     public Mono<User> save(User user) {
-        log.warn("Insertando usuario en base de datos: {}", user.toString());
+        log.warn(UserSqlConstants.LOG_INSERT_USER, user.toString());
 
-        return client.sql("""
-                INSERT INTO auth.users(first_name, last_name, email, identity_document, phone, base_salary, id_role)
-                VALUES (:firstName, :lastName, :email, :identityDocument, :phone, :baseSalary, :idRole)
-                RETURNING id_user
-                """)
+        return client.sql(UserSqlConstants.INSERT_USER)
                 .bind("firstName", user.getFirstName())
                 .bind("lastName", user.getLastName())
                 .bind("email", user.getEmail())
@@ -42,52 +48,76 @@ public class UserRepositoryAdapter implements UserRepository {
                         .build()
                 )
                 .one()
-                .doOnSuccess(u -> log.info("Usuario insertado con id {}", u.getIdUser()))
-                .doOnError(e -> log.error("Error al insertar usuario: {}", e.getMessage()));
+                .doOnSuccess(u -> log.info(UserSqlConstants.LOG_USER_INSERTED, u.getIdUser()))
+                .doOnError(e -> log.error(UserSqlConstants.LOG_INSERT_ERROR, e.getMessage()));
     }
 
+    /**
+     * Verifica si existe un usuario en la base de datos con el email dado.
+     *
+     * @param email Dirección de correo electrónico a verificar.
+     * @return {@link Mono} que emite <code>true</code> si el usuario existe, de lo contrario <code>false</code>.
+     */
     @Override
     public Mono<Boolean> existsByEmail(String email) {
-        return client.sql("SELECT COUNT(*) as cnt FROM auth.users WHERE email = :email")
+        return client.sql(UserSqlConstants.EXISTS_BY_EMAIL)
                 .bind("email", email)
                 .map(row -> row.get("cnt", Long.class) > 0)
                 .one();
     }
+
+    /**
+     * Verifica si existe un usuario en la base de datos con el documento de identidad dado.
+     *
+     * @param identityDocument Documento de identidad a verificar.
+     * @return {@link Mono} que emite <code>true</code> si el usuario existe, de lo contrario <code>false</code>.
+     */
     @Override
     public Mono<Boolean> existsByIdentityDocument(String identityDocument) {
-        return client.sql("SELECT COUNT(*) as cnt FROM auth.users WHERE identity_document = :identityDocument")
+        return client.sql(UserSqlConstants.EXISTS_BY_DOCUMENT)
                 .bind("identityDocument", identityDocument)
                 .map(row -> row.get("cnt", Long.class) > 0)
                 .one()
                 .doOnSuccess(exists -> {
                     if (Boolean.TRUE.equals(exists)) {
-                        log.info("✅ Usuario con documento [{}] encontrado en la base de datos.", identityDocument);
+                        log.info(UserSqlConstants.LOG_DOC_FOUND, identityDocument);
                     } else {
-                        log.warn("Usuario con documento [{}] NO existe en la base de datos.", identityDocument);
+                        log.warn(UserSqlConstants.LOG_DOC_NOT_FOUND, identityDocument);
                     }
                 })
-                .doOnError(e -> log.error(" Error al verificar usuario: {}", e.getMessage()));
+                .doOnError(e -> log.error(UserSqlConstants.LOG_DOC_ERROR, e.getMessage()));
     }
 
+    /**
+     * Verifica si existe un rol en la base de datos con el identificador dado.
+     *
+     * @param id Identificador único del rol.
+     * @return {@link Mono} que emite <code>true</code> si el rol existe, de lo contrario <code>false</code>.
+     */
     @Override
     public Mono<Boolean> existsByRol(Long id) {
-        return client.sql("SELECT COUNT(*) AS cnt FROM auth.role WHERE uniqueid = :id")
+        return client.sql(UserSqlConstants.EXISTS_BY_ROLE)
                 .bind("id", id)
                 .map(row -> {
-                    Number count = row.get("cnt", Number.class); // soporte para Integer/Long
+                    Number count = row.get("cnt", Number.class);
                     return count != null && count.longValue() > 0;
                 })
                 .one();
     }
+
+    /**
+     * Busca un usuario en la base de datos utilizando su dirección de correo electrónico.
+     * <p>
+     * Si el usuario existe, retorna el objeto {@link User} completo; de lo contrario, retorna vacío.
+     *
+     * @param email Dirección de correo electrónico del usuario.
+     * @return {@link Mono} que emite el {@link User} encontrado o vacío si no existe.
+     */
     @Override
     public Mono<User> findByEmail(String email) {
-        log.info("Buscando usuario con email: {}", email);
+        log.info(UserSqlConstants.LOG_SEARCH_USER, email);
 
-        return client.sql("""
-            SELECT id_user, first_name, last_name, email, identity_document, phone, base_salary, id_role, password
-            FROM auth.users 
-            WHERE email = :email
-            """)
+        return client.sql(UserSqlConstants.FIND_BY_EMAIL)
                 .bind("email", email)
                 .map(row -> User.builder()
                         .idUser(row.get("id_user", Long.class))
@@ -102,12 +132,12 @@ public class UserRepositoryAdapter implements UserRepository {
                         .build()
                 )
                 .one()
-                .doOnNext(user -> log.info("Usuario encontrado: {} {}", user.getFirstName(), user.getLastName()))
+                .doOnNext(user -> log.info(UserSqlConstants.LOG_USER_FOUND, user.getFirstName(), user.getLastName()))
                 .switchIfEmpty(Mono.defer(() -> {
-                    log.warn("No se encontró usuario con email: {}", email);
+                    log.warn(UserSqlConstants.LOG_USER_NOT_FOUND, email);
                     return Mono.empty();
                 }))
-                .doOnError(e -> log.error("Error al buscar usuario con email {}: {}", email, e.getMessage()));
+                .doOnError(e -> log.error(UserSqlConstants.LOG_SEARCH_ERROR, email, e.getMessage()));
     }
-
 }
+

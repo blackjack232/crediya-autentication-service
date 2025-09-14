@@ -114,7 +114,8 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 
 
 @Configuration
-public class RouterRest {
+public class RouterRestUser {
+
 
     @Bean
     @RouterOperations({

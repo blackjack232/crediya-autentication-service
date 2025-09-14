@@ -19,30 +19,56 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * Implementación de {@link TokenProvider} basada en JWT con RSA (RS256).
+ *
+ * - Firma tokens con clave privada en formato PKCS#8.
+ * - Valida tokens con clave pública.
+ * - Permite extraer información como el subject (email) y roles.
+ */
 @Component
 public class JwtProvider implements TokenProvider {
 
     private final PrivateKey privateKey;
     private final PublicKey publicKey;
-    private final long EXPIRATION_TIME = 3600000; // 1 hora
 
+    /** Tiempo de expiración del token en milisegundos (1 hora). */
+    private final long EXPIRATION_TIME = 3600000;
+
+    /**
+     * Constructor que carga las llaves pública y privada desde el classpath.
+     *
+     * @throws Exception si ocurre un error cargando las llaves.
+     */
     public JwtProvider() throws Exception {
         this.privateKey = loadPrivateKey("keys/private_key_pkcs8.pem");
         this.publicKey = loadPublicKey("keys/public_key.pem");
     }
 
+    /**
+     * Genera un token JWT para el usuario autenticado.
+     *
+     * @param user usuario autenticado.
+     * @return token JWT firmado con RS256.
+     */
     @Override
     public String generateToken(User user) {
         return Jwts.builder()
-                .setSubject(user.getEmail())
-                .claim("role", String.valueOf(user.getIdRole())) // convertir a String
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
-                .signWith(privateKey, SignatureAlgorithm.RS256)
+                .setSubject(user.getEmail()) // email será el "subject"
+                .claim("role", String.valueOf(user.getIdRole())) // rol convertido a String
+                .setIssuedAt(new Date()) // fecha de emisión
+                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME)) // expiración
+                .signWith(privateKey, SignatureAlgorithm.RS256) // firmado con la clave privada
                 .compact();
     }
 
-
+    /**
+     * Valida un token JWT asegurando que esté firmado correctamente
+     * y no haya expirado.
+     *
+     * @param token token JWT a validar.
+     * @return true si el token es válido, false en caso contrario.
+     */
     @Override
     public boolean validateToken(String token) {
         try {
@@ -56,6 +82,12 @@ public class JwtProvider implements TokenProvider {
         }
     }
 
+    /**
+     * Obtiene el "subject" del token, que corresponde al email del usuario.
+     *
+     * @param token token JWT.
+     * @return email del usuario contenido en el token.
+     */
     @Override
     public String getSubjectFromToken(String token) {
         return Jwts.parserBuilder()
@@ -66,6 +98,12 @@ public class JwtProvider implements TokenProvider {
                 .getSubject();
     }
 
+    /**
+     * Extrae los roles del usuario desde el token JWT.
+     *
+     * @param token token JWT.
+     * @return lista con los roles del usuario.
+     */
     @Override
     public List<String> extractRole(String token) {
         String role = Jwts.parserBuilder()
@@ -74,20 +112,33 @@ public class JwtProvider implements TokenProvider {
                 .parseClaimsJws(token)
                 .getBody()
                 .get("role", String.class);
-        return List.of(role); // siempre devolvemos lista
+        return List.of(role); // se devuelve como lista para mayor flexibilidad
     }
 
-
+    /**
+     * Carga la clave privada desde un archivo PEM en formato PKCS#8.
+     *
+     * @param path ruta del archivo PEM en resources.
+     * @return clave privada RSA.
+     * @throws Exception si ocurre un error al procesar la clave.
+     */
     private PrivateKey loadPrivateKey(String path) throws Exception {
         try (InputStream inputStream = new ClassPathResource(path).getInputStream()) {
             byte[] keyBytes = cleanPem(inputStream.readAllBytes(),
-                    "-----BEGIN PRIVATE KEY-----",   // 👈 en lugar de RSA PRIVATE KEY
+                    "-----BEGIN PRIVATE KEY-----",
                     "-----END PRIVATE KEY-----");
             PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);
             return KeyFactory.getInstance("RSA").generatePrivate(spec);
         }
     }
 
+    /**
+     * Carga la clave pública desde un archivo PEM.
+     *
+     * @param path ruta del archivo PEM en resources.
+     * @return clave pública RSA.
+     * @throws Exception si ocurre un error al procesar la clave.
+     */
     private PublicKey loadPublicKey(String path) throws Exception {
         try (InputStream inputStream = new ClassPathResource(path).getInputStream()) {
             byte[] keyBytes = cleanPem(inputStream.readAllBytes(),
@@ -98,7 +149,15 @@ public class JwtProvider implements TokenProvider {
         }
     }
 
-
+    /**
+     * Limpia el contenido de un archivo PEM eliminando las cabeceras,
+     * pies de archivo y espacios en blanco.
+     *
+     * @param pemBytes contenido del archivo PEM.
+     * @param beginMarker marcador de inicio (ej: "-----BEGIN PUBLIC KEY-----").
+     * @param endMarker marcador de fin (ej: "-----END PUBLIC KEY-----").
+     * @return arreglo de bytes con la clave decodificada en Base64.
+     */
     private byte[] cleanPem(byte[] pemBytes, String beginMarker, String endMarker) {
         String pem = new String(pemBytes, StandardCharsets.UTF_8);
         pem = pem.replace(beginMarker, "")
