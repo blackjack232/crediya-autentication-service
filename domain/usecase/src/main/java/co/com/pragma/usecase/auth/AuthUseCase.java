@@ -47,21 +47,17 @@ public class AuthUseCase {
      * @return Mono que emite un token JWT si la autenticación es exitosa,
      *         o un error en caso de fallo.
      */
+
     public Mono<String> login(Auth auth) {
         if (!EMAIL_PATTERN.matcher(auth.getEmail()).matches()) {
             return Mono.error(new RuntimeException(UserMessages.ERROR_INVALID_EMAIL));
         }
 
-        return userRepository.findByEmail(auth.getEmail())
-                .flatMap(user -> {
-                    if (user.getPassword().equals(auth.getPassword())) {
-                        return Mono.just(tokenProvider.generateToken(user));
-                    } else {
-                        return Mono.error(new RuntimeException(UserMessages.ERROR_INVALID_CREDENTIALS));
-                    }
-                })
+        return userRepository.findByEmail(auth.getEmail(), auth.getPassword())
+                .map(user -> tokenProvider.generateToken(user))
                 .switchIfEmpty(Mono.error(new RuntimeException(UserMessages.ERROR_USER_NOT_FOUND)));
     }
+
 }
 
 

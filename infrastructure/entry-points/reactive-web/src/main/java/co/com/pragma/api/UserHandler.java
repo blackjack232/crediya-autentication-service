@@ -300,16 +300,18 @@ public class UserHandler {
      */
     private Mono<ServerResponse> checkUserExists(String identification) {
         return userUseCase.existsUserByIdentification(identification)
+                .filter(Boolean::booleanValue) // 🔥 Solo deja pasar si es true
                 .flatMap(exists -> ResponseBuilder.success(
-                        exists,
+                        true, // forzamos el true en la respuesta
                         UserMessages.USER_VALIDATED,
                         HttpCode.OK.getValue()
                 ))
                 .switchIfEmpty(ResponseBuilder.error(
                         UserMessages.USER_NOT_FOUND,
-                        HttpCode.NOT_FOUND.getValue()
+                        HttpCode.OK.getValue()
                 ));
     }
+
 }
 
 

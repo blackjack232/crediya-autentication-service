@@ -9,10 +9,11 @@ public final class UserSqlConstants {
 
     // SQL QUERIES
     public static final String INSERT_USER = """
-            INSERT INTO auth.users(first_name, last_name, email, identity_document, phone, base_salary, id_role)
-            VALUES (:firstName, :lastName, :email, :identityDocument, :phone, :baseSalary, :idRole)
+            INSERT INTO auth.users(first_name, last_name, email, identity_document, phone, base_salary, password, id_role)
+            VALUES (:firstName, :lastName, :email, :identityDocument, :phone, :baseSalary, :password, :idRole)
             RETURNING id_user
             """;
+
 
     public static final String EXISTS_BY_EMAIL = """
             SELECT COUNT(*) as cnt FROM auth.users WHERE email = :email

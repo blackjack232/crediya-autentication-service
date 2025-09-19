@@ -10,5 +10,6 @@ public class UserRequest {
     private String identityDocument;
     private String phone;
     private Integer idRole;
+    private String password;
     private Double baseSalary;
 }

@@ -96,7 +96,8 @@ public class UserUseCase {
      * @return {@link Mono} que emite {@code true} si el usuario existe,
      * o {@code false} si no existe.
      */
-    public Mono<Boolean> existsUserByIdentification(String identityDocument) {
+    public Mono<Boolean>
+    existsUserByIdentification(String identityDocument) {
         return userRepository.existsByIdentityDocument(identityDocument);
     }
 }

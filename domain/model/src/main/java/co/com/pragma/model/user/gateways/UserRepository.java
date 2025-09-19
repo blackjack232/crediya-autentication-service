@@ -17,7 +17,7 @@ public interface UserRepository {
      *
      * @param email dirección de correo electrónico a verificar.
      * @return un {@link Mono} que emite {@code true} si el email ya está registrado,
-     *         o {@code false} en caso contrario.
+     * o {@code false} en caso contrario.
      */
     Mono<Boolean> existsByEmail(String email);
 
@@ -26,7 +26,7 @@ public interface UserRepository {
      *
      * @param identityDocument número de documento de identidad a validar.
      * @return un {@link Mono} que emite {@code true} si el documento ya existe,
-     *         o {@code false} en caso contrario.
+     * o {@code false} en caso contrario.
      */
     Mono<Boolean> existsByIdentityDocument(String identityDocument);
 
@@ -35,16 +35,17 @@ public interface UserRepository {
      *
      * @param id identificador único del rol.
      * @return un {@link Mono} que emite {@code true} si el rol existe,
-     *         o {@code false} si no se encuentra.
+     * o {@code false} si no se encuentra.
      */
     Mono<Boolean> existsByRol(Long id);
 
     /**
      * Busca un usuario en el sistema a partir de su email.
+     * compara los passwaords
      *
      * @param email dirección de correo electrónico del usuario.
      * @return un {@link Mono} que emite el {@link User} encontrado o vacío si no existe.
      */
-    Mono<User> findByEmail(String email);
 
+    Mono<User> findByEmail(String email, String rawPassword);
 }

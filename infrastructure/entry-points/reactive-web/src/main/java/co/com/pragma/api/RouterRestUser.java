@@ -210,11 +210,11 @@ public class RouterRestUser {
                                             content = @Content(schema = @Schema(implementation = String.class))
                                     ),
                                     @ApiResponse(
-                                            responseCode = "401",
+                                            responseCode = "200",
                                             description = "Token inválido o ausente"
                                     ),
                                     @ApiResponse(
-                                            responseCode = "404",
+                                            responseCode = "200",
                                             description = "Usuario no encontrado"
                                     )
                             }
