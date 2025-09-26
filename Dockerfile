@@ -12,6 +12,7 @@ COPY . .
 RUN gradle clean bootJar --no-daemon -x validateStructure
 
 FROM eclipse-temurin:21-jre
+
 WORKDIR /app
 
 # 👇 Aquí copiamos el JAR correcto desde el módulo app-service
